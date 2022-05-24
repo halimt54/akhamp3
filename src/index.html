@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+
+<body>
+    <button id="audio-button">Hide Audio</button>
+    <audio controls>
+        <source src="/song/99" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+<br/>
+<br/>
+<br/>
+    <form action="/import" method="post" enctype="multipart/form-data">
+        <label for="files">Select mp3 files:</label>
+        <input type="file" accept=".mp3" id="files" name="files" multiple><br><br>
+        <input type="submit">
+      </form>
+
+<!-- 
+    <video width="320" height="240" controls>
+        <source src="/mp4" type="video/mp4">
+      Your browser does not support the video tag.
+      </video>
+    -->
+
+</body>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
+  <script>
+      $('document').ready(function() {
+          
+
+          $('#audio-button').click(function() {
+              const audioElem = $('audio')
+              if(audioElem.is(":visible")) {
+                audioElem.hide()
+                $('#audio-button').html('Show Audio')
+              } else {
+                audioElem.show()
+                $('#audio-button').html('Hide Audio')
+              }
+          })
+      })
+  </script>
+</html>

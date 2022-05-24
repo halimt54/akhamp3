@@ -1,0 +1,42 @@
+version: '3.8'
+services:
+  mysqldb:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_DATABASE: 'local'
+      # So you don't have to use root, but you can if you like
+      MYSQL_USER: 'user'
+      # You can use whatever password you like
+      MYSQL_PASSWORD: 'password'
+      # Password for root access
+      MYSQL_ROOT_PASSWORD: 'password'
+    ports:
+      # <Port exposed> : < MySQL Port running inside container>
+      - '3399:3306'
+    expose:
+      # Opens port 3306 on the container
+      - '3306'
+      # Where our data will be persisted
+    volumes:
+      - ./mysql-dump:/docker-entrypoint-initdb.d
+      - ./db-files:/var/lib/mysql
+
+  app:
+    depends_on:
+      - mysqldb
+    build: ./src
+    restart: unless-stopped
+    env_file: ./.env
+    ports:
+      - 8080:8080
+    environment:
+      - DB_HOST=mysqldb
+      - DB_USER=$DB_USER
+      - DB_PASS=$DB_PASS
+      - DB_NAME=$DB_NAME
+      - DB_PORT=$DB_PORT
+    volumes:
+      - ./songs:/src/uploads
+    stdin_open: true
+    tty: true
