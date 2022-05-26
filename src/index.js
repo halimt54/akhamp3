@@ -4,12 +4,16 @@ const fileUpload = require('express-fileupload');
 
 const bodyParser = require('body-parser');
 
+const cors = require('cors')
+
 const mysql = require('./mysqlWrapper')
 
 const app = express()
 const fs = require('fs')
 const port = 8080
 
+// enable all cors
+app.use(cors())
 
 // enable files upload
 app.use(fileUpload({
