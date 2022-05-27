@@ -1,42 +1,15 @@
 var objectUrl;
 var durationMusic;
-var musicListLocal = [];
 const endPoint = "http://localhost:8080/list";
-
-// musics duration 
-$("#audio").on("canplaythrough", function (e) {
-
-
-  var seconds = e.currentTarget.duration;
-  var duration = moment.duration(seconds, "seconds");
-  var time = "";
-  var hours = duration.hours();
-  if (hours > 0) { time = hours + ":"; }
-
-  time = time + duration.minutes() + ":" + duration.seconds();
-  $("#duration").text(time);
-  durationMusic = time;
-  URL.revokeObjectURL(objectUrl);
-
-});
-
-function durations() {
-  var audio = document.getElementById("audio");
-  if (audio.readyState > 0) {
-    var minutes = parseInt(audio.duration / 60, 10);
-    var seconds = parseInt(audio.duration % 60);
-
-    console.log(minutes + ":" + seconds);
-  }
-}
-
+var listAudio;
+var playListItems;
 // musics info
 $("#file").change(function (e) {
   var data = new FormData();
-  jQuery.each(jQuery('#files')[0].files, function(i, file) {
-      data.append('files-'+i, file);
+  jQuery.each(jQuery('#files')[0].files, function (i, file) {
+    data.append('files-' + i, file);
   });
-  
+
   jQuery.ajax({
     url: 'http://localhost:8080/import',
     data: data,
@@ -45,12 +18,13 @@ $("#file").change(function (e) {
     processData: false,
     method: 'POST',
     type: 'POST', // For jQuery < 1.9
-    success: function(data){
-        alert(data);
+    success: function (data) {
+      alert(data);
     }
   });
-  
-  });
+
+
+});
 
 
 
@@ -63,6 +37,7 @@ function createTrackItem(index, name, duration) {
   trackItem.setAttribute("id", "ptc-" + index);
   trackItem.setAttribute("data-index", index);
   document.querySelector(".playlist-ctn").appendChild(trackItem);
+  console.log(index)
 
 
 
@@ -103,48 +78,34 @@ function createTrackItem(index, name, duration) {
   document.querySelector("#ptc-" + index).appendChild(btnDelete);
 }
 
+async function updateDatas() {
 
+  const res = await fetch(endPoint)
+  const json = await res.json();
+  listAudio = json.result;
+  console.log(json.result)
+  for (var i = 0; i < listAudio.length; i++) {
+    createTrackItem(i, listAudio[i].name, listAudio[i].id);
+  }
+  if (listAudio.length > 0) {
+    $(".player-ctn").show();
+    $(".uploadRow").show();
+  }
+  else {
+    $(".player-ctn").show();
+    $(".uploadRow").show();
+  }
+  playListItems = document.querySelectorAll(".playlist-track-ctn");
 
-
-fetch(endPoint)
-  .then(data => {
-    return data.json()
-  })
-  .then(res => {
-
-    console.log(res)
-
-  });
-
-
-// list Audio array
-var listAudio = [
-  {
-    name: "Artist 1 - audio 1",
-    file: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3",
-    duration: "08:47"
-  },
-  {
-    name: "Artist 2 - audio 2",
-    file: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3",
-    duration: "05:53"
-  },
-  {
-    name: "Artist 3 - audio 3",
-    file: "https://file-examples.com/wp-content/uploads/2017/11/file_example_MP3_1MG.mp3",
-    duration: "00:27"
+  for (let i = 0; i < playListItems.length; i++) {
+    playListItems[i].addEventListener("click", getClickedElement.bind(this));
   }
 
-]
+}
 
-if (listAudio.length > 0) {
-  $(".player-ctn").show();
-  $(".uploadRow").hide();
-}
-else {
-  $(".player-ctn").hide();
-  $(".uploadRow").show();
-}
+updateDatas();
+
+
 
 function upload() {
   $(".player-ctn").hide();
@@ -153,15 +114,15 @@ function upload() {
 
 
 
-for (var i = 0; i < listAudio.length; i++) {
-  createTrackItem(i, listAudio[i].name, listAudio[i].duration);
-}
+
 var indexAudio = 0;
 
 function loadNewTrack(index) {
   var player = document.querySelector('#source-audio')
-  player.src = listAudio[index].file
-  document.querySelector('.title').innerHTML = listAudio[index].name
+  var song = listAudio[index];
+  console.log(song)
+  player.src = "http://localhost:8080/song/" + song.id;
+  document.querySelector('.title').innerHTML = song.name;
   this.currentAudio = document.getElementById("myAudio");
   this.currentAudio.load()
   this.toggleAudio()
@@ -169,11 +130,7 @@ function loadNewTrack(index) {
   this.indexAudio = index;
 }
 
-var playListItems = document.querySelectorAll(".playlist-track-ctn");
 
-for (let i = 0; i < playListItems.length; i++) {
-  playListItems[i].addEventListener("click", getClickedElement.bind(this));
-}
 
 function getClickedElement(event) {
   for (let i = 0; i < playListItems.length; i++) {
@@ -188,8 +145,7 @@ function getClickedElement(event) {
   }
 }
 
-document.querySelector('#source-audio').src = listAudio[indexAudio].file
-document.querySelector('.title').innerHTML = listAudio[indexAudio].name
+
 
 
 var currentAudio = document.getElementById("myAudio");
