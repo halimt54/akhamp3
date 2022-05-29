@@ -18,11 +18,12 @@
   <div class="uploadRow" >
 
 
-    <form action="http://localhost:8080/import" method="post" enctype="multipart/form-data">
+    <form id="form" enctype="multipart/form-data">
       <input type="file" accept=".mp3" id="files" name="files" multiple><br>
       <p>Drag your files here or click in this area.</p>
-      <input type="submit" value="upload">
+      <input type="button" id="submit" value="upload">
     </form>
+    
 
   </div>
   <div class="row">

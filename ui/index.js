@@ -1,45 +1,18 @@
-var objectUrl;
-var durationMusic;
+
 const endPoint = "http://localhost:8080/list";
 var listAudio;
 var playListItems;
 // musics info
-$("#file").change(function (e) {
-  var data = new FormData();
-  jQuery.each(jQuery('#files')[0].files, function (i, file) {
-    data.append('files-' + i, file);
-  });
-
-  jQuery.ajax({
-    url: 'http://localhost:8080/import',
-    data: data,
-    cache: false,
-    contentType: false,
-    processData: false,
-    method: 'POST',
-    type: 'POST', // For jQuery < 1.9
-    success: function (data) {
-      alert(data);
-    }
-  });
-
-
-});
-
-
 
 
 // create track item
-function createTrackItem(index, name, duration) {
+function createTrackItem(index, name) {
 
   var trackItem = document.createElement('div');
   trackItem.setAttribute("class", "playlist-track-ctn");
   trackItem.setAttribute("id", "ptc-" + index);
   trackItem.setAttribute("data-index", index);
   document.querySelector(".playlist-ctn").appendChild(trackItem);
-  console.log(index)
-
-
 
   var playBtnItem = document.createElement('div');
   playBtnItem.setAttribute("class", "playlist-btn-play");
@@ -58,11 +31,6 @@ function createTrackItem(index, name, duration) {
   trackInfoItem.innerHTML = name
   document.querySelector("#ptc-" + index).appendChild(trackInfoItem);
 
-  var trackDurationItem = document.createElement('div');
-  trackDurationItem.setAttribute("class", "playlist-duration");
-  trackDurationItem.innerHTML = duration
-  document.querySelector("#ptc-" + index).appendChild(trackDurationItem);
-
   var btnFav = document.createElement('div');
   btnFav.setAttribute("class", "fas fa-heart");
   btnFav.setAttribute("height", "40");
@@ -78,6 +46,32 @@ function createTrackItem(index, name, duration) {
   document.querySelector("#ptc-" + index).appendChild(btnDelete);
 }
 
+
+$("#submit").on("click", function () {
+  var data = new FormData();
+  $.each(jQuery('#files')[0].files, function (i, file) {
+    data.append('file-' + i, file);
+  });
+  console.log(files)
+  $.ajax({
+    url: 'http://localhost:8080/import',
+    data: data,
+    cache: false,
+    contentType: false,
+    processData: false,
+    method: 'POST',
+    success: function (data) {
+      alert(data);
+    },
+    error: function (error) {
+      console.log(error);
+    }
+  });
+
+})
+
+
+
 async function updateDatas() {
 
   const res = await fetch(endPoint)
@@ -87,34 +81,37 @@ async function updateDatas() {
   for (var i = 0; i < listAudio.length; i++) {
     createTrackItem(i, listAudio[i].name, listAudio[i].id);
   }
-  if (listAudio.length > 0) {
-    $(".player-ctn").show();
-    $(".uploadRow").show();
-  }
-  else {
-    $(".player-ctn").show();
-    $(".uploadRow").show();
-  }
-  playListItems = document.querySelectorAll(".playlist-track-ctn");
+  changeScreen();
+  playListItems();
 
+
+}
+
+
+function playListItems() {
+  playListItems = document.querySelectorAll(".playlist-track-ctn");
   for (let i = 0; i < playListItems.length; i++) {
     playListItems[i].addEventListener("click", getClickedElement.bind(this));
   }
 
 }
 
-updateDatas();
+function changeScreen() {
+  if (listAudio.length > 0) {
+    $(".player-ctn").show();
+    $(".uploadRow").hide();
+  }
+  else {
+    $(".player-ctn").hide();
+    $(".uploadRow").show();
+  }
 
-
+}
 
 function upload() {
   $(".player-ctn").hide();
   $(".uploadRow").show();
 }
-
-
-
-
 var indexAudio = 0;
 
 function loadNewTrack(index) {
@@ -130,8 +127,6 @@ function loadNewTrack(index) {
   this.indexAudio = index;
 }
 
-
-
 function getClickedElement(event) {
   for (let i = 0; i < playListItems.length; i++) {
     if (playListItems[i] == event.target) {
@@ -145,13 +140,8 @@ function getClickedElement(event) {
   }
 }
 
-
-
-
 var currentAudio = document.getElementById("myAudio");
-
 currentAudio.load()
-
 currentAudio.onloadedmetadata = function () {
   document.getElementsByClassName('duration')[0].innerHTML = this.getMinutes(this.currentAudio.duration)
 }.bind(this);
@@ -183,7 +173,6 @@ var timer = document.getElementsByClassName('timer')[0]
 
 var barProgress = document.getElementById("myBar");
 
-
 var width = 0;
 
 function onTimeUpdate() {
@@ -201,12 +190,13 @@ function onTimeUpdate() {
   }
 }
 
+var progressbar = document.querySelector('#myProgress')
+progressbar.addEventListener("click", seek.bind(this));
 
 function setBarProgress() {
   var progress = (this.currentAudio.currentTime / this.currentAudio.duration) * 100;
   document.getElementById("myBar").style.width = progress + "%";
 }
-
 
 function getMinutes(t) {
   var min = parseInt(parseInt(t) / 60);
@@ -219,10 +209,6 @@ function getMinutes(t) {
   }
   return min + ":" + sec
 }
-
-var progressbar = document.querySelector('#myProgress')
-progressbar.addEventListener("click", seek.bind(this));
-
 
 function seek(event) {
   var percent = event.offsetX / progressbar.offsetWidth;
@@ -239,7 +225,6 @@ function rewind() {
   this.currentAudio.currentTime = this.currentAudio.currentTime - 5
   this.setBarProgress();
 }
-
 
 function next() {
   if (this.indexAudio < listAudio.length - 1) {
@@ -278,19 +263,6 @@ function pauseToPlay(index) {
   ele.classList.add("fa-play");
 }
 
-
-function normalToFav(index) {
-  var ele = document.querySelector('#p-img-' + index)
-  ele.classList.remove("far fa-heart");
-  ele.classList.add("fas fa-heart");
-}
-
-function favToNormal(index) {
-  var ele = document.querySelector('#p-img-' + index)
-  ele.classList.remove("fas fa-heart");
-  ele.classList.add("far fa-heart");
-}
-
 function toggleMute() {
   var btnMute = document.querySelector('#toggleMute');
   var volUp = document.querySelector('#icon-vol-up');
@@ -306,16 +278,20 @@ function toggleMute() {
   }
 }
 
-$("#fileI").click(function () {
-  $("#file").trigger('click');
-});
-
-
-
-// when you create new musiclist , we do Id , current date and time
-function currentDateTimeId() {
-  var currentdate = new Date();
-  var date = currentdate.getDate() + "" + (currentdate.getMonth() + 1) + "" + currentdate.getFullYear();
-  var time = currentdate.getHours() + "" + currentdate.getMinutes() + "" + currentdate.getSeconds();
-  return date + time;
+function normalToFav(index) {
+  var ele = document.querySelector('#p-img-' + index)
+  ele.classList.remove("far fa-heart");
+  ele.classList.add("fas fa-heart");
 }
+
+function favToNormal(index) {
+  var ele = document.querySelector('#p-img-' + index)
+  ele.classList.remove("fas fa-heart");
+  ele.classList.add("far fa-heart");
+}
+
+
+
+
+
+updateDatas();
