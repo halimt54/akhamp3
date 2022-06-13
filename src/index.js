@@ -39,13 +39,13 @@ app.get('/song/:id', async (req, res) => {
     }
     const sql = `select file_path from song where id = ?`
     const songResult = await mysql.select(sql, [id])
-    
+
     if (!songResult || songResult.length == 0) {
         return res.status(404).send({
             message: "song not found"
         })
     }
-    
+
     var song = songResult[0]
     var filePath = song.file_path
     var stat = fs.statSync(filePath);
@@ -110,46 +110,59 @@ app.get('/list', async (req, res) => {
             return r
         })
     }
-    
+
     res.send({
         result
     })
 })
 
 app.post('/import', async (req, res) => {
-    if (!req.files) {
-        return res.status(400).send({
-            message: "no files sent"
+    try {
+
+        if (!req.files) {
+            return res.status(400).send({
+                message: "no files sent"
+            })
+        }
+        // console.log(req.files)
+        let data = []
+        const files = req.files
+        Object.values(files).forEach((song) => {
+            //move photo to uploads directory
+            const filePath = './uploads/' + song.name
+            song.mv(filePath);
+
+            //push file details
+            data.push({
+                name: song.name,
+                mimetype: song.mimetype,
+                size: song.size,
+                filePath
+            });
+        })
+
+        if (data.length < 1) {
+            throw new Error("Faulty data, could not get files")
+        }
+        const sql = `insert into song (name, file_path, metadata) values ?`
+        const paramsArray = data.map(d => ([
+            d.name,
+            d.filePath,
+            JSON.stringify(d)
+        ]))
+        const result = await mysql.update(sql, [paramsArray])
+
+        res.send({
+            message: data,
+            result
+        })
+    } catch (error) {
+        console.log(error)
+        res.status(500).send({
+            message: "unknown error",
+            error
         })
     }
-    let data = []
-    const files = req.files.files
-    files.forEach((song) => {
-        //move photo to uploads directory
-        const filePath = './uploads/' + song.name
-        song.mv(filePath);
-
-        //push file details
-        data.push({
-            name: song.name,
-            mimetype: song.mimetype,
-            size: song.size,
-            filePath
-        });
-    })
-    const sql = `insert into song (name, file_path, metadata) values ?`
-    const paramsArray = data.map(d => ([
-        d.name,
-        d.filePath,
-        JSON.stringify(d)
-    ]))
-    console.log(paramsArray)
-    const result = await mysql.update(sql, [paramsArray])
-    
-    res.send({
-        message: data,
-        result
-    })
 })
 
 
