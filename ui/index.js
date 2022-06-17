@@ -52,7 +52,7 @@ $("#submit").on("click", function () {
   $.each(jQuery('#files')[0].files, function (i, file) {
     data.append('file-' + i, file);
   });
-  console.log(files)
+  console.log(data)
   $.ajax({
     url: 'http://localhost:8080/import',
     data: data,
@@ -61,12 +61,16 @@ $("#submit").on("click", function () {
     processData: false,
     method: 'POST',
     success: function (data) {
-      alert(data);
+      $(".player-ctn").show();
+      $(".uploadRow").hide();
+      $('#pForm').html("Drag your files here or click in this area.");
     },
     error: function (error) {
       console.log(error);
     }
+
   });
+
 
 })
 
@@ -107,6 +111,27 @@ function changeScreen() {
   }
 
 }
+
+
+
+$('#files').change(function(){ 
+  updateList();
+  
+});
+
+updateList = function() {
+  var input = document.getElementById('files');
+  var output = document.getElementById('pForm');
+
+  output.innerHTML = '<ul>';
+  for (var i = 0; i < input.files.length; ++i) {
+    output.innerHTML += '<li>' + input.files.item(i).name + '</li>';
+  }
+  output.innerHTML += '</ul>';
+}
+
+
+
 
 function upload() {
   $(".player-ctn").hide();
