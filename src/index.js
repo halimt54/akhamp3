@@ -10,8 +10,9 @@ const mysql = require('./mysqlWrapper')
 
 const app = express()
 const streamerApi = express.Router()
-const fs = require('fs')
-const port = 8080
+const fs = require('fs');
+const mysqlWrapper = require('./mysqlWrapper');
+const port = 8081
 
 // enable all cors
 app.use(cors())
@@ -115,6 +116,270 @@ streamerApi.get('/list', async (req, res) => {
     res.send({
         result
     })
+})
+
+streamerApi.patch('/favorite', async (req, res) => {
+    try {
+        const { songId } = req.body
+        if (!songId) {
+            return res.status(400).send({
+                message: "songId is missing"
+            })
+        }
+        const sql = `update song set is_fav = 1 where id = ?`
+        const result = await mysqlWrapper.update(sql, [songId])
+
+        if (!result) {
+            return res.status(500).send({
+                message: "could not set as favorite, please make sure the song is not in favorite list"
+            })
+        }
+        res.send({
+            message: "operation is successful",
+        })
+    } catch (error) {
+        console.log(error)
+        res.status(500).send({
+            message: "unknown error",
+            error
+        })
+    }
+})
+
+streamerApi.delete('/favorite', async (req, res) => {
+    try {
+        const { songId } = req.body
+        if (!songId) {
+            return res.status(400).send({
+                message: "songId is missing"
+            })
+        }
+        const sql = `update song set is_fav = 0 where id = ?`
+        const result = await mysqlWrapper.update(sql, [songId])
+
+        if (!result) {
+            return res.status(500).send({
+                message: "could not unset the favorite, please make sure the song is in favorite list"
+            })
+        }
+        res.send({
+            message: "operation is successful",
+        })
+    } catch (error) {
+        console.log(error)
+        res.status(500).send({
+            message: "unknown error",
+            error
+        })
+    }
+})
+
+streamerApi.get('/favorite', async (req, res) => {
+    try {
+        const sql = `select * from song where is_fav = 1`
+        const data = await mysqlWrapper.select(sql)
+
+        res.send({
+            message: "operation is successful",
+            data
+        })
+    } catch (error) {
+        console.log(error)
+        res.status(500).send({
+            message: "unknown error",
+            error
+        })
+    }
+})
+
+// get playlists
+streamerApi.get('/playlist', async (req, res) => {
+    try {
+        const sql = `select * from playlist`
+        const data = await mysqlWrapper.select(sql)
+
+        res.send({
+            message: "operation is successful",
+            data
+        })
+    } catch (error) {
+        console.log(error)
+        res.status(500).send({
+            message: "unknown error",
+            error
+        })
+    }
+})
+// add playlist
+streamerApi.post('/playlist', async (req, res) => {
+    try {
+        const { playlistName } = req.body
+        if (!playlistName) {
+            return res.status(400).send({
+                message: "playlistName is missing"
+            })
+        }
+        const sql = `insert into playlist (\`name\`) values (?)`
+        const result = await mysqlWrapper.autoIncrementInsert(sql, [playlistName])
+
+        if (result < 1) {
+            return res.status(500).send({
+                message: "could not insert new playlist, please check if the playlistName param is sent correcly and is unique"
+            })
+        }
+        res.send({
+            message: "operation is successful",
+            playlistId: result
+        })
+    } catch (error) {
+        console.log(error)
+        res.status(500).send({
+            message: "unknown error",
+            error
+        })
+    }
+})
+
+// update playlist
+streamerApi.put('/playlist', async (req, res) => {
+    try {
+        const { playlistId, playlistName } = req.body
+        if (!playlistId || !playlistName) {
+            return res.status(400).send({
+                message: "playlistId or playlistName is missing"
+            })
+        }
+        const sql = `update playlist set \`name\` = ? where id = ?`
+        const result = await mysqlWrapper.update(sql, [playlistName, playlistId])
+
+        if (!result) {
+            return res.status(500).send({
+                message: "could notupdate playlist, please check parameters"
+            })
+        }
+        res.send({
+            message: "operation is successful"
+        })
+    } catch (error) {
+        console.log(error)
+        res.status(500).send({
+            message: "unknown error",
+            error
+        })
+    }
+})
+
+// delete playlist
+streamerApi.delete('/playlist', async (req, res) => {
+    try {
+        const { playlistId } = req.body
+        if (!playlistId) {
+            return res.status(400).send({
+                message: "playlistId is missing"
+            })
+        }
+        const sql = `delete from playlist where id = ?`
+        const result = await mysqlWrapper.delete(sql, [playlistId, songId])
+
+        if (!result) {
+            return res.status(500).send({
+                message:  "could not delete playlist, please check parameters"
+            })
+        }
+        res.send({
+            message: "operation is successful"
+        })
+    } catch (error) {
+        console.log(error)
+        res.status(500).send({
+            message: "unknown error",
+            error
+        })
+    }
+})
+
+// add song to playlist
+streamerApi.post('/playlistSong', async (req, res) => {
+    try {
+        const { playlistId, songId } = req.body
+        if (!playlistId || !songId) {
+            return res.status(400).send({
+                message: "playlistId or songId is missing"
+            })
+        }
+        const sql = `insert into playlist_song (playlist_id, song_id) values (?, ?)`
+        const result = await mysqlWrapper.insert(sql, [playlistId, songId])
+
+        if (!result) {
+            return res.status(500).send({
+                message: "could not add song to playlist, please check parameters"
+            })
+        }
+        res.send({
+            message: "operation is successful"
+        })
+    } catch (error) {
+        console.log(error)
+        res.status(500).send({
+            message: "unknown error",
+            error
+        })
+    }
+})
+
+// delete song from playlist
+streamerApi.delete('/playlistSong', async (req, res) => {
+    try {
+        const { playlistId, songId } = req.body
+        if (!playlistId || !songId) {
+            return res.status(400).send({
+                message: "playlistId or songId is missing"
+            })
+        }
+        const sql = `delete from playlist_song where playlist_id = ? and song_id = ?`
+        const result = await mysqlWrapper.delete(sql, [playlistId, songId])
+
+        if (!result) {
+            return res.status(500).send({
+                message:  "could not remove song from playlist, please check parameters"
+            })
+        }
+        res.send({
+            message: "operation is successful"
+        })
+    } catch (error) {
+        console.log(error)
+        res.status(500).send({
+            message: "unknown error",
+            error
+        })
+    }
+})
+
+// get playlist songs
+streamerApi.get('/playlist', async (req, res) => {
+    try {
+        const { playlistId } = req.body
+        if (!playlistId) {
+            return res.status(400).send({
+                message: "playlistId is missing"
+            })
+        }
+
+        const sql = `select so.* from playlist_song plso join song so on so.id = plso.song_id where plso.playlist_id = ?`
+        const data = await mysqlWrapper.select(sql, [playlistId])
+
+        res.send({
+            message: "operation is successful",
+            data
+        })
+    } catch (error) {
+        console.log(error)
+        res.status(500).send({
+            message: "unknown error",
+            error
+        })
+    }
 })
 
 streamerApi.post('/import', async (req, res) => {
