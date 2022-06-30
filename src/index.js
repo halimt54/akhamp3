@@ -9,6 +9,7 @@ const cors = require('cors')
 const mysql = require('./mysqlWrapper')
 
 const app = express()
+const streamerApi = express.Router()
 const fs = require('fs')
 const port = 8080
 
@@ -25,12 +26,12 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 
-app.get('/', (req, res) => {
+streamerApi.get('/', (req, res) => {
     res.sendFile('index.html', { root: __dirname })
 })
 
 
-app.get('/song/:id', async (req, res) => {
+streamerApi.get('/song/:id', async (req, res) => {
     const id = req.params.id
     if (!id) {
         return res.status(400).send({
@@ -97,7 +98,7 @@ app.get('/mp4', (req, res) => {
 })
 */
 
-app.get('/list', async (req, res) => {
+streamerApi.get('/list', async (req, res) => {
     const sql = `select id, name, is_fav, metadata from song`
 
     let result = await mysql.select(sql)
@@ -116,7 +117,7 @@ app.get('/list', async (req, res) => {
     })
 })
 
-app.post('/import', async (req, res) => {
+streamerApi.post('/import', async (req, res) => {
     try {
 
         if (!req.files) {
@@ -165,6 +166,7 @@ app.post('/import', async (req, res) => {
     }
 })
 
+app.use('/streamer-api', streamerApi)
 
 const server = app.listen(port, () => {
     console.log("server is ready and listening on " + port)

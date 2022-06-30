@@ -2,3 +2,4 @@ node_modules
 db-files/*
 songs/*
 src/node_modules
+.env
