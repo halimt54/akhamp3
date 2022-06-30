@@ -279,7 +279,7 @@ streamerApi.delete('/playlist', async (req, res) => {
             })
         }
         const sql = `delete from playlist where id = ?`
-        const result = await mysqlWrapper.delete(sql, [playlistId, songId])
+        const result = await mysqlWrapper.delete(sql, [playlistId])
 
         if (!result) {
             return res.status(500).send({
@@ -357,7 +357,7 @@ streamerApi.delete('/playlistSong', async (req, res) => {
 })
 
 // get playlist songs
-streamerApi.get('/playlist', async (req, res) => {
+streamerApi.get('/playlistSong', async (req, res) => {
     try {
         const { playlistId } = req.body
         if (!playlistId) {
