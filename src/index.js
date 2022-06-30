@@ -359,8 +359,8 @@ streamerApi.delete('/playlistSong', async (req, res) => {
 // get playlist songs
 streamerApi.get('/playlistSong/:id', async (req, res) => {
     try {
-        const id = req.params.id
-        if (!id) {
+        const playlistId = req.params.id
+        if (!playlistId) {
             return res.status(400).send({
                 message: "playlist id is missing"
             })
