@@ -4,13 +4,13 @@
 <body>
     <button id="audio-button">Hide Audio</button>
     <audio controls>
-        <source src="/song/99" type="audio/mpeg">
+        <source src="/streamer-api/song/99" type="audio/mpeg">
         Your browser does not support the audio element.
     </audio>
 <br/>
 <br/>
 <br/>
-    <form action="/import" method="post" enctype="multipart/form-data">
+    <form action="/streamer-api/import" method="post" enctype="multipart/form-data">
         <label for="files">Select mp3 files:</label>
         <input type="file" accept=".mp3" id="files" name="files" multiple><br><br>
         <input type="submit">
